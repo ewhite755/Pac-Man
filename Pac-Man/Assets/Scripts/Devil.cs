@@ -31,6 +31,10 @@ public class Devil : MonoBehaviour
         CheckInput();
 
         Move();
+
+        UpdateOrientation();
+
+        ConsumePellet();
     }
 
     void CheckInput()
@@ -134,6 +138,18 @@ public class Devil : MonoBehaviour
 
     }
 
+    void UpdateOrientation()
+    {
+        if (direction == Vector2.left)
+        {
+            transform.localScale = new Vector3 (-1,1,1);
+        }
+        else if (direction == Vector2.right)
+        {
+            transform.localScale = new Vector3(1, 1, 1);
+        }
+    }
+
     void MoveToNode (Vector2 d)
     {
         Node moveToNode = CanMove(d);
@@ -142,6 +158,25 @@ public class Devil : MonoBehaviour
         {
             transform.localPosition = moveToNode.transform.position;
             currentNode = moveToNode;
+        }
+    }
+
+    void ConsumePellet ()
+    {
+        GameObject o = GetTileAtPosition(transform.position);
+
+        if (o != null)
+        {
+            Tile tile = o.GetComponent<Tile>();
+
+            if (tile != null)
+            {
+                if (!tile.didConsume && (tile.isPellet || tile.isSuperPellet))
+                {
+                    o.GetComponent<SpriteRenderer>().enabled = false;
+                    tile.didConsume = true;
+                }
+            }
         }
     }
 
@@ -159,6 +194,19 @@ public class Devil : MonoBehaviour
         }
 
         return moveToNode;
+    }
+
+    GameObject GetTileAtPosition (Vector2 pos)
+    {
+        int tileX = Mathf.RoundToInt(pos.x);
+        int tileY = Mathf.RoundToInt(pos.y);
+
+        GameObject tile = GameObject.Find("Game").GetComponent<GameBoard>().board[tileX, tileY];
+
+        if (tile != null)
+            return tile;
+
+        return null;
     }
 
     Node GetNodeAtPosition (Vector2 pos)
