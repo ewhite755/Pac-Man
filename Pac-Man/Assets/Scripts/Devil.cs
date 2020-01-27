@@ -1,13 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Devil : MonoBehaviour
 {
     public float speed = 4.0f;
 
+    public AudioSource musicSource;
+    public AudioClip musicClipOne;
+
     private Vector2 direction = Vector2.zero;
     private Vector2 nextDirection;
+
+    private int count;
+    public Text countText;
+    public Text winText;
 
     private Node currentNode, previousNode, targetNode;
 
@@ -23,6 +31,10 @@ public class Devil : MonoBehaviour
 
         direction = Vector2.left;
         ChangePosition(direction);
+
+        count = 0;
+        winText.text = "";
+        SetCountText();
     }
 
 
@@ -35,6 +47,11 @@ public class Devil : MonoBehaviour
         UpdateOrientation();
 
         ConsumePellet();
+
+        if (Input.GetKey("escape"))
+        {
+            Application.Quit();
+        }
     }
 
     void CheckInput()
@@ -60,7 +77,7 @@ public class Devil : MonoBehaviour
         }
     }
 
-    void ChangePosition (Vector2 d)
+    void ChangePosition(Vector2 d)
     {
         if (d != direction)
             nextDirection = d;
@@ -142,7 +159,7 @@ public class Devil : MonoBehaviour
     {
         if (direction == Vector2.left)
         {
-            transform.localScale = new Vector3 (-1,1,1);
+            transform.localScale = new Vector3(-1, 1, 1);
         }
         else if (direction == Vector2.right)
         {
@@ -150,7 +167,7 @@ public class Devil : MonoBehaviour
         }
     }
 
-    void MoveToNode (Vector2 d)
+    void MoveToNode(Vector2 d)
     {
         Node moveToNode = CanMove(d);
 
@@ -161,7 +178,7 @@ public class Devil : MonoBehaviour
         }
     }
 
-    void ConsumePellet ()
+    void ConsumePellet()
     {
         GameObject o = GetTileAtPosition(transform.position);
 
@@ -180,13 +197,13 @@ public class Devil : MonoBehaviour
         }
     }
 
-    Node CanMove (Vector2 d)
+    Node CanMove(Vector2 d)
     {
         Node moveToNode = null;
 
         for (int i = 0; i < currentNode.neighbors.Length; i++)
         {
-            if (currentNode.validDirections [i] == d)
+            if (currentNode.validDirections[i] == d)
             {
                 moveToNode = currentNode.neighbors[i];
                 break;
@@ -196,7 +213,7 @@ public class Devil : MonoBehaviour
         return moveToNode;
     }
 
-    GameObject GetTileAtPosition (Vector2 pos)
+    GameObject GetTileAtPosition(Vector2 pos)
     {
         int tileX = Mathf.RoundToInt(pos.x);
         int tileY = Mathf.RoundToInt(pos.y);
@@ -209,7 +226,7 @@ public class Devil : MonoBehaviour
         return null;
     }
 
-    Node GetNodeAtPosition (Vector2 pos)
+    Node GetNodeAtPosition(Vector2 pos)
     {
         GameObject tile = GameObject.Find("Game").GetComponent<GameBoard>().board[(int)pos.x, (int)pos.y];
 
@@ -221,7 +238,7 @@ public class Devil : MonoBehaviour
         return null;
     }
 
-    bool OverShotTarget ()
+    bool OverShotTarget()
     {
         float nodeToTarget = LengthFromNode(targetNode.transform.position);
         float nodeToSelf = LengthFromNode(transform.localPosition);
@@ -229,13 +246,13 @@ public class Devil : MonoBehaviour
         return nodeToSelf > nodeToTarget;
     }
 
-    float LengthFromNode (Vector2 targetPosition)
+    float LengthFromNode(Vector2 targetPosition)
     {
         Vector2 vec = targetPosition - (Vector2)previousNode.transform.position;
         return vec.sqrMagnitude;
     }
 
-    GameObject GetPortal (Vector2 pos)
+    GameObject GetPortal(Vector2 pos)
     {
         GameObject tile = GameObject.Find("Game").GetComponent<GameBoard>().board[(int)pos.x, (int)pos.y];
 
@@ -255,4 +272,25 @@ public class Devil : MonoBehaviour
         return null;
     }
 
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.gameObject.CompareTag("Pellet"))
+        {
+            other.gameObject.SetActive(false);
+            musicSource.clip = musicClipOne;
+            musicSource.Play();
+
+            count = count + 1;
+            SetCountText();
+        }
+    }
+
+    void SetCountText()
+    {
+        countText.text = "Count " + count.ToString();
+        if (count >= 194)
+        {
+            winText.text = "You win!";
+        }
+    }
 }
